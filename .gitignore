@@ -1,0 +1,15 @@
+# Model files (too large for GitHub)
+models/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs and user data
+logs.json
+users.json
+
+# Environment
+.env
+*.env

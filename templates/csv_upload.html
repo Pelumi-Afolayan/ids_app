@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload — IDS</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
+    <div class="nav-right">
+        <span>Logged in as <span class="nav-user">{{ username }}</span></span>
+        <a href="/history">History</a>
+        <a href="/settings">Settings</a>
+        {% if role == "admin" %}
+        <a href="/admin">Admin Panel</a>
+        {% endif %}
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/" class="back-link">&#8592; Back to Home</a>
+
+    <div class="section-title">Bulk CSV Analysis</div>
+    <p class="section-sub">Upload a CSV file containing network flow records. The file must include the 19 required feature columns.</p>
+
+<!-- Required columns reference -->
+<div style="margin-bottom: 28px;">
+    <button onclick="toggleColumns()" class="btn btn-outline" style="font-size: 0.82rem; padding: 8px 18px;">
+        📋 View Required Columns
+    </button>
+    <div id="columns-list" style="display: none; margin-top: 16px; background-color: #0d1226; border: 1px solid #1e2d4a; border-radius: 10px; padding: 24px;">
+        <p style="font-size: 0.85rem; color: #8a9bb5; margin-bottom: 16px;">
+            Your CSV file must contain the following 19 columns. Column names must match exactly.
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="col-item">FLOW_DURATION_MILLISECONDS</div>
+            <div class="col-item">PROTOCOL</div>
+            <div class="col-item">TCP_FLAGS</div>
+            <div class="col-item">TCP_WIN_MAX_IN</div>
+            <div class="col-item">TCP_WIN_MAX_OUT</div>
+            <div class="col-item">TCP_WIN_MIN_IN</div>
+            <div class="col-item">TCP_WIN_MIN_OUT</div>
+            <div class="col-item">TCP_WIN_MSS_IN</div>
+            <div class="col-item">TCP_WIN_SCALE_IN</div>
+            <div class="col-item">TCP_WIN_SCALE_OUT</div>
+            <div class="col-item">SRC_TOS</div>
+            <div class="col-item">DST_TOS</div>
+            <div class="col-item">TOTAL_FLOWS_EXP</div>
+            <div class="col-item">L4_SRC_PORT</div>
+            <div class="col-item">L4_DST_PORT</div>
+            <div class="col-item">IN_BYTES</div>
+            <div class="col-item">IN_PKTS</div>
+            <div class="col-item">OUT_BYTES</div>
+            <div class="col-item">OUT_PKTS</div>
+        </div>
+    </div>
+</div>
+
+    <div class="form-card">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+        <!-- View Results -->
+        <div>
+            <p style="font-size: 0.88rem; color: #8a9bb5; margin-bottom: 16px;">
+                Upload and view predictions in the browser.
+            </p>
+            <form action="/predict/csv" method="post" enctype="multipart/form-data">
+                <div class="upload-area" onclick="document.getElementById('csv-input-view').click()">
+                    <div class="upload-icon">📂</div>
+                    <p>Click to select a CSV file</p>
+                    <input type="file" id="csv-input-view" name="file" accept=".csv" onchange="showFileName(this, 'file-name-view')">
+                    <div id="file-name-view">No file selected</div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">View Results</button>
+            </form>
+        </div>
+
+        <!-- Download Results -->
+        <div>
+            <p style="font-size: 0.88rem; color: #8a9bb5; margin-bottom: 16px;">
+                Upload and download predictions as a CSV file.
+            </p>
+            <form action="/predict/csv/download" method="post" enctype="multipart/form-data">
+                <div class="upload-area" onclick="document.getElementById('csv-input-download').click()">
+                    <div class="upload-icon">⬇️</div>
+                    <p>Click to select a CSV file</p>
+                    <input type="file" id="csv-input-download" name="file" accept=".csv" onchange="showFileName(this, 'file-name-download')">
+                    <div id="file-name-download">No file selected</div>
+                </div>
+                <button type="submit" class="btn btn-outline" style="width: 100%;">Download Results</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<footer>
+    Developed as part of a Final Year Project &mdash; Redeemer's University Nigeria, 2026
+</footer>
+
+<script>
+    function showFileName(input) {
+        const label = document.getElementById('file-name');
+        label.textContent = input.files[0] ? input.files[0].name : 'No file selected';
+    }
+
+
+</script>
+
+<script>
+    function toggleColumns() {
+        const list = document.getElementById('columns-list');
+        list.style.display = list.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function showFileName(input) {
+        const label = document.getElementById('file-name');
+        label.textContent = input.files[0] ? input.files[0].name : 'No file selected';
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result — IDS</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
+    <div class="nav-right">
+        <span>Logged in as <span class="nav-user">{{ username }}</span></span>
+        <a href="/history">History</a>
+        <a href="/settings">Settings</a>
+        {% if role == "admin" %}
+        <a href="/admin">Admin Panel</a>
+        {% endif %}
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/single" class="back-link">&#8592; Check Another Record</a>
+
+    <div class="hero">
+        <div class="result-card">
+            {% if prediction == "Attack" %}
+            <div class="result-icon">⚠️</div>
+            <div class="result-label attack">Attack Detected</div>
+            <p class="result-desc">This network flow record has been classified as malicious traffic. It matches patterns associated with known attack behaviour.</p>
+            {% else %}
+            <div class="result-icon">✅</div>
+            <div class="result-label normal">Normal Traffic</div>
+            <p class="result-desc">This network flow record has been classified as normal traffic. No intrusion patterns were detected.</p>
+            {% endif %}
+            <a href="/single" class="btn btn-outline">Check Another Record</a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Developed as part of a Final Year Project &mdash; Redeemer's University Nigeria, 2026
+</footer>
+
+</body>
+</html>

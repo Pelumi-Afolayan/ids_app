@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — IDS</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
+    <div class="nav-right">
+        <span>Logged in as <span class="nav-user">{{ username }}</span></span>
+        <a href="/history">History</a>
+        <a href="/settings">Settings</a>
+        {% if role == "admin" %}
+        <a href="/admin">Admin Panel</a>
+        {% endif %}
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/" class="back-link">&#8592; Back to Home</a>
+
+    <div class="section-title" style="margin-bottom: 8px;">Account Settings</div>
+    <p class="section-sub">Change your password below.</p>
+
+    <div class="form-card" style="max-width: 480px;">
+
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% endif %}
+        {% if success %}
+        <div class="success-msg">{{ success }}</div>
+        {% endif %}
+
+        <form action="/settings" method="post">
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label>Current Password</label>
+                <input type="password" name="old_password"
+                       placeholder="Enter current password" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label>New Password</label>
+                <input type="password" name="new_password"
+                       placeholder="Enter new password" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>Confirm New Password</label>
+                <input type="password" name="confirm_password"
+                       placeholder="Repeat new password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Password</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    Developed as part of a Final Year Project &mdash; Redeemer's University Nigeria, 2026
+</footer>
+
+</body>
+</html>

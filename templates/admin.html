@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — IDS</title>
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
+    <div class="nav-right">
+        <span>Logged in as <span class="nav-user">{{ username }}</span></span>
+        <a href="/history">History</a>
+        <a href="/settings">Settings</a>
+        {% if role == "admin" %}
+        <a href="/admin">Admin Panel</a>
+        {% endif %}
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="section-title" style="margin-bottom: 8px;">Admin Dashboard</div>
+    <p class="section-sub">System overview and prediction history across all users.</p>
+
+    <!-- Summary stats -->
+    <div class="admin-grid">
+        <div class="admin-stat">
+            <div class="stat-number">{{ total_predictions }}</div>
+            <div class="stat-label">Total Predictions</div>
+        </div>
+        <div class="admin-stat safe">
+            <div class="stat-number">{{ total_normal }}</div>
+            <div class="stat-label">Normal Traffic</div>
+        </div>
+        <div class="admin-stat danger">
+            <div class="stat-number">{{ total_attack }}</div>
+            <div class="stat-label">Attacks Detected</div>
+        </div>
+    </div>
+
+    <!-- Add User Form -->
+    <div class="form-card" style="margin-bottom: 40px;">
+        <div class="section-title" style="font-size: 1rem; margin-bottom: 6px;">Add New User</div>
+        <p class="section-sub" style="margin-bottom: 24px;">Create a new account and assign a role.</p>
+
+        {% if add_success %}
+        <div class="success-msg">{{ add_success }}</div>
+        {% endif %}
+        {% if add_error %}
+        <div class="error-msg">{{ add_error }}</div>
+        {% endif %}
+
+        <form action="/admin/add-user" method="post">
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="new_username" placeholder="e.g. john_doe" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="new_password" placeholder="Enter password" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select name="new_role" style="background-color: #131b30; border: 1px solid #1e2d4a; border-radius: 6px; padding: 10px 14px; color: #e0e0e0; font-size: 0.9rem; outline: none;">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add User</button>
+        </form>
+    </div>
+
+    <!-- Delete success/error messages -->
+    {% if del_success %}
+    <div class="success-msg" style="margin-bottom: 20px;">{{ del_success }}</div>
+    {% endif %}
+    {% if del_error %}
+    <div class="error-msg" style="margin-bottom: 20px;">{{ del_error }}</div>
+    {% endif %}
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchTab('predictions', event)">All Predictions</button>
+        <button class="admin-tab" onclick="switchTab('users', event)">Registered Users</button>
+    </div>
+
+    <!-- All Predictions tab -->
+    <div id="tab-predictions" class="tab-content active">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Records</th>
+                        <th>Attacks</th>
+                        <th>Normal</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in prediction_logs %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ log.username }}</td>
+                        <td>{{ log.type }}</td>
+                        <td>{{ log.total }}</td>
+                        <td><span class="badge badge-attack">{{ log.attacks }}</span></td>
+                        <td><span class="badge badge-normal">{{ log.normal }}</span></td>
+                        <td>{{ log.timestamp }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not prediction_logs %}
+                    <tr>
+                        <td colspan="7" style="text-align:center; color:#8a9bb5; padding: 32px;">
+                            No predictions made yet.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Registered Users tab -->
+    <div id="tab-users" class="tab-content">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Total Predictions</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>
+                            {% if user.role == "admin" %}
+                            <span class="role-badge role-admin">Admin</span>
+                            {% else %}
+                            <span class="role-badge role-user">User</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.prediction_count }}</td>
+                        <td>
+                            {% if user.username != "admin" %}
+                            <form action="/admin/delete-user" method="post"
+                                  onsubmit="return confirm('Delete {{ user.username }}?')">
+                                <input type="hidden" name="del_username" value="{{ user.username }}">
+                                <button type="submit" style="
+                                    background: none;
+                                    border: 1px solid #ff4d6d44;
+                                    color: #ff4d6d;
+                                    padding: 4px 12px;
+                                    border-radius: 6px;
+                                    font-size: 0.78rem;
+                                    cursor: pointer;
+                                    transition: background 0.2s;">
+                                    Delete
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: #3a4a60; font-size: 0.78rem;">Protected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    Developed as part of a Final Year Project &mdash; Redeemer's University Nigeria, 2026
+</footer>
+
+<script>
+    function switchTab(tab, e) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        e.target.classList.add('active');
+    }
+</script>
+
+</body>
+</html>

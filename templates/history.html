@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction History — IDS</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
+    <div class="nav-right">
+        <span>Logged in as <span class="nav-user">{{ username }}</span></span>
+        <a href="/history">History</a>
+        <a href="/settings">Settings</a>
+        {% if role == "admin" %}
+        <a href="/admin">Admin Panel</a>
+        {% endif %}
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/" class="back-link">&#8592; Back to Home</a>
+
+    <div class="section-title" style="margin-bottom: 8px;">Prediction History</div>
+    <p class="section-sub">
+        {% if role == "admin" %}
+        All prediction activity across all users.
+        {% else %}
+        Your personal prediction activity.
+        {% endif %}
+    </p>
+
+    <!-- Summary stats -->
+    <div class="admin-grid" style="margin-bottom: 36px;">
+        <div class="admin-stat">
+            <div class="stat-number">{{ total_predictions }}</div>
+            <div class="stat-label">Total Sessions</div>
+        </div>
+        <div class="admin-stat safe">
+            <div class="stat-number">{{ total_normal }}</div>
+            <div class="stat-label">Normal Records</div>
+        </div>
+        <div class="admin-stat danger">
+            <div class="stat-number">{{ total_attack }}</div>
+            <div class="stat-label">Attacks Found</div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    {% if role == "admin" %}<th>User</th>{% endif %}
+                    <th>Type</th>
+                    <th>Total Records</th>
+                    <th>Attacks</th>
+                    <th>Normal</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    {% if role == "admin" %}<td>{{ log.username }}</td>{% endif %}
+                    <td>{{ log.type }}</td>
+                    <td>{{ log.total }}</td>
+                    <td><span class="badge badge-attack">{{ log.attacks }}</span></td>
+                    <td><span class="badge badge-normal">{{ log.normal }}</span></td>
+                    <td>{{ log.timestamp }}</td>
+                </tr>
+                {% endfor %}
+                {% if not logs %}
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#8a9bb5; padding: 32px;">
+                        No prediction history yet.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<footer>
+    Developed as part of a Final Year Project &mdash; Redeemer's University Nigeria, 2026
+</footer>
+
+</body>
+</html>

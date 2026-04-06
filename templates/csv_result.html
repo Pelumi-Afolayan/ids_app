@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results — IDS</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
+    <div class="nav-right">
+        <span>Logged in as <span class="nav-user">{{ username }}</span></span>
+        <a href="/history">History</a>
+        <a href="/settings">Settings</a>
+        {% if role == "admin" %}
+        <a href="/admin">Admin Panel</a>
+        {% endif %}
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/csv" class="back-link">&#8592; Upload Another File</a>
+
+    <div class="results-header">
+        <div>
+            <div class="section-title">Prediction Results</div>
+            <p class="section-sub" style="margin-bottom:0">{{ total }} records analysed</p>
+        </div>
+        <div class="stats">
+            <div class="stat-box safe">
+                <div class="stat-number">{{ normal }}</div>
+                <div class="stat-label">Normal</div>
+            </div>
+            <div class="stat-box danger">
+                <div class="stat-number">{{ attack }}</div>
+                <div class="stat-label">Attack</div>
+            </div>
+        </div>
+        <button onclick="downloadTable()" class="btn btn-outline" style="font-size: 0.82rem; padding: 8px 18px;">
+            ⬇ Download Results
+        </button>
+    </div>
+
+    <!-- Filter bar -->
+    <div style="margin-bottom: 16px; display: flex; gap: 10px;">
+        <button class="filter-btn active" onclick="filterTable('all', this)">All ({{ total }})</button>
+        <button class="filter-btn normal" onclick="filterTable('normal', this)">✔ Normal ({{ normal }})</button>
+        <button class="filter-btn attack" onclick="filterTable('attack', this)">⚠ Attack ({{ attack }})</button>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>IN_BYTES</th>
+                    <th>OUT_BYTES</th>
+                    <th>IN_PKTS</th>
+                    <th>OUT_PKTS</th>
+                    <th>PROTOCOL</th>
+                    <th>Prediction</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td>{{ row.index }}</td>
+                    <td>{{ row.IN_BYTES }}</td>
+                    <td>{{ row.OUT_BYTES }}</td>
+                    <td>{{ row.IN_PKTS }}</td>
+                    <td>{{ row.OUT_PKTS }}</td>
+                    <td>{{ row.PROTOCOL }}</td>
+                    <td>
+                        {% if row.prediction == "Attack" %}
+                        <span class="badge badge-attack">⚠ Attack</span>
+                        {% else %}
+                        <span class="badge badge-normal">✔ Normal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination controls -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; gap: 12px;">
+        <span id="page-info" style="font-size: 0.85rem; color: #8a9bb5;"></span>
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-prev" onclick="prevPage()" class="btn btn-outline"
+                    style="font-size: 0.82rem; padding: 8px 18px;">
+                ← Previous
+            </button>
+            <button id="btn-next" onclick="nextPage()" class="btn btn-primary"
+                    style="font-size: 0.82rem; padding: 8px 18px;">
+                Next →
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    Developed as part of a Final Year Project &mdash; Redeemer's University Nigeria, 2026
+</footer>
+
+<script>
+    const ROWS_PER_PAGE = 50;
+    let currentPage = 1;
+    let filteredRows = [];
+
+    function getAllRows() {
+        return Array.from(document.querySelectorAll('tbody tr'));
+    }
+
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredRows.length / ROWS_PER_PAGE);
+
+        // Hide all rows first
+        getAllRows().forEach(r => r.style.display = 'none');
+
+        // Show only current page rows
+        const start = (currentPage - 1) * ROWS_PER_PAGE;
+        const end = start + ROWS_PER_PAGE;
+        filteredRows.slice(start, end).forEach(r => r.style.display = '');
+
+        // Update pagination info
+        document.getElementById('page-info').textContent =
+            `Page ${currentPage} of ${totalPages} (${filteredRows.length} records)`;
+
+        // Update button states
+        document.getElementById('btn-prev').disabled = currentPage === 1;
+        document.getElementById('btn-next').disabled = currentPage === totalPages || totalPages === 0;
+    }
+
+    function filterTable(type, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const allRows = getAllRows();
+        if (type === 'all') {
+            filteredRows = allRows;
+        } else if (type === 'normal') {
+            filteredRows = allRows.filter(row => {
+                const badge = row.querySelector('.badge');
+                return badge && badge.classList.contains('badge-normal');
+            });
+        } else if (type === 'attack') {
+            filteredRows = allRows.filter(row => {
+                const badge = row.querySelector('.badge');
+                return badge && badge.classList.contains('badge-attack');
+            });
+        }
+
+        currentPage = 1;
+        updatePagination();
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePagination();
+        }
+    }
+
+    function nextPage() {
+        const totalPages = Math.ceil(filteredRows.length / ROWS_PER_PAGE);
+        if (currentPage < totalPages) {
+            currentPage++;
+            updatePagination();
+        }
+    }
+
+    function downloadTable() {
+        const allRows = getAllRows();
+        const headers = Array.from(document.querySelectorAll('thead th'))
+            .map(th => '"' + th.innerText.trim() + '"');
+        let csv = [headers.join(',')];
+        allRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const rowData = Array.from(cells).map(cell => {
+                return '"' + cell.innerText.replace(/"/g, '""').trim() + '"';
+            });
+            csv.push(rowData.join(','));
+        });
+        const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ids_predictions.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Initialise on page load
+    window.onload = function() {
+        filteredRows = getAllRows();
+        updatePagination();
+    };
+</script>
+
+</body>
+</html>

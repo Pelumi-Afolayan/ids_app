@@ -1,0 +1,14 @@
+{
+    "users": [
+        {
+            "username": "admin",
+            "password": "<bcrypt_hashed_password>",
+            "role": "admin"
+        },
+        {
+            "username": "user1",
+            "password": "<bcrypt_hashed_password>",
+            "role": "user"
+        }
+    ]
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Record — IDS</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
+    <div class="nav-right">
+        <span>Logged in as <span class="nav-user">{{ username }}</span></span>
+        <a href="/history">History</a>
+        <a href="/settings">Settings</a>
+        {% if role == "admin" %}
+        <a href="/admin">Admin Panel</a>
+        {% endif %}
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/" class="back-link">&#8592; Back to Home</a>
+
+    <div class="section-title">Single Record Check</div>
+    <p class="section-sub">Enter the 19 network flow feature values below to get an instant prediction.</p>
+
+    <div class="form-card">
+        <form action="/predict/single" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>FLOW_DURATION_MILLISECONDS</label>
+                    <input type="number" step="any" name="FLOW_DURATION_MILLISECONDS" required>
+                </div>
+                <div class="form-group">
+                    <label>PROTOCOL</label>
+                    <input type="number" step="any" name="PROTOCOL" required>
+                </div>
+                <div class="form-group">
+                    <label>TCP_FLAGS</label>
+                    <input type="number" step="any" name="TCP_FLAGS" required>
+                </div>
+                <div class="form-group">
+                    <label>TCP_WIN_MAX_IN</label>
+                    <input type="number" step="any" name="TCP_WIN_MAX_IN" required>
+                </div>
+                <div class="form-group">
+                    <label>TCP_WIN_MAX_OUT</label>
+                    <input type="number" step="any" name="TCP_WIN_MAX_OUT" required>
+                </div>
+                <div class="form-group">
+                    <label>TCP_WIN_MIN_IN</label>
+                    <input type="number" step="any" name="TCP_WIN_MIN_IN" required>
+                </div>
+                <div class="form-group">
+                    <label>TCP_WIN_MIN_OUT</label>
+                    <input type="number" step="any" name="TCP_WIN_MIN_OUT" required>
+                </div>
+                <div class="form-group">
+                    <label>TCP_WIN_MSS_IN</label>
+                    <input type="number" step="any" name="TCP_WIN_MSS_IN" required>
+                </div>
+                <div class="form-group">
+                    <label>TCP_WIN_SCALE_IN</label>
+                    <input type="number" step="any" name="TCP_WIN_SCALE_IN" required>
+                </div>
+                <div class="form-group">
+                    <label>TCP_WIN_SCALE_OUT</label>
+                    <input type="number" step="any" name="TCP_WIN_SCALE_OUT" required>
+                </div>
+                <div class="form-group">
+                    <label>SRC_TOS</label>
+                    <input type="number" step="any" name="SRC_TOS" required>
+                </div>
+                <div class="form-group">
+                    <label>DST_TOS</label>
+                    <input type="number" step="any" name="DST_TOS" required>
+                </div>
+                <div class="form-group">
+                    <label>TOTAL_FLOWS_EXP</label>
+                    <input type="number" step="any" name="TOTAL_FLOWS_EXP" required>
+                </div>
+                <div class="form-group">
+                    <label>L4_SRC_PORT</label>
+                    <input type="number" step="any" name="L4_SRC_PORT" required>
+                </div>
+                <div class="form-group">
+                    <label>L4_DST_PORT</label>
+                    <input type="number" step="any" name="L4_DST_PORT" required>
+                </div>
+                <div class="form-group">
+                    <label>IN_BYTES</label>
+                    <input type="number" step="any" name="IN_BYTES" required>
+                </div>
+                <div class="form-group">
+                    <label>IN_PKTS</label>
+                    <input type="number" step="any" name="IN_PKTS" required>
+                </div>
+                <div class="form-group">
+                    <label>OUT_BYTES</label>
+                    <input type="number" step="any" name="OUT_BYTES" required>
+                </div>
+                <div class="form-group">
+                    <label>OUT_PKTS</label>
+                    <input type="number" step="any" name="OUT_PKTS" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Analyse Record</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    Developed as part of a Final Year Project &mdash; Redeemer's University Nigeria, 2026
+</footer>
+
+</body>
+</html>
