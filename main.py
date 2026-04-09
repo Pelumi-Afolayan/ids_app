@@ -406,3 +406,51 @@ async def settings_post(request: Request,
         "error":    error_msg if not success else None,
         "success":  "Password changed successfully." if success else None
     })
+
+
+# Model evaluation page
+@app.get("/evaluation", response_class=HTMLResponse)
+async def evaluation_page(request: Request):
+    user = require_login(request)
+    if not user:
+        return RedirectResponse("/login", status_code=302)
+
+    # Fixed results from training
+    models_data = [
+        {
+            "name": "KNN",
+            "accuracy": 99.97, "precision": 99.93, "recall": 99.99,
+            "f1": 99.96, "specificity": 99.96, "auc_roc": 99.99,
+            "tp": 99960, "tn": 99920, "fp": 40, "fn": 80
+        },
+        {
+            "name": "LinearSVC",
+            "accuracy": 98.27, "precision": 96.13, "recall": 99.07,
+            "f1": 97.58, "specificity": 97.84, "auc_roc": 99.44,
+            "tp": 99070, "tn": 97840, "fp": 2160, "fn": 930
+        },
+        {
+            "name": "Logistic Regression",
+            "accuracy": 98.30, "precision": 96.16, "recall": 99.14,
+            "f1": 97.63, "specificity": 97.86, "auc_roc": 99.49,
+            "tp": 99140, "tn": 97860, "fp": 2140, "fn": 860
+        },
+        {
+            "name": "Stacking Ensemble",
+            "accuracy": 99.98, "precision": 99.95, "recall": 99.99,
+            "f1": 99.97, "specificity": 99.97, "auc_roc": 100.00,
+            "tp": 99990, "tn": 99970, "fp": 30, "fn": 10
+        },
+        {
+            "name": "XGBoost (Benchmark)",
+            "accuracy": 100.00, "precision": 99.99, "recall": 100.00,
+            "f1": 99.99, "specificity": 99.99, "auc_roc": 100.00,
+            "tp": 100000, "tn": 99990, "fp": 10, "fn": 0
+        }
+    ]
+
+    return templates.TemplateResponse(request, "evaluation.html", {
+        "username": user["username"],
+        "role":     user["role"],
+        "models":   models_data
+    })

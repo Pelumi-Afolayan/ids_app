@@ -639,3 +639,246 @@ footer {
     color: #ff4d6d;
     border-color: #ff4d6d44;
 }
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+
+    /* Nav */
+    nav {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 14px 20px;
+    }
+
+    .nav-right {
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 0.82rem;
+    }
+
+    /* Container */
+    .container {
+        margin: 32px auto;
+        padding: 0 16px;
+    }
+
+    /* Hero */
+    .hero h1 {
+        font-size: 1.4rem;
+    }
+
+    /* Home cards */
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    /* Form grid */
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Admin stats grid */
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Add user form grid */
+    .form-grid[style*="1fr 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Stats boxes */
+    .stats {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .stat-box {
+        flex: 1;
+        min-width: 100px;
+    }
+
+    /* Results header */
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Table */
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 500px;
+    }
+
+    /* Filter buttons */
+    .filter-btn {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+    }
+
+    /* Form card */
+    .form-card {
+        padding: 24px 20px;
+    }
+
+    /* Login card */
+    .login-card {
+        padding: 32px 24px;
+    }
+
+    /* Result card */
+    .result-card {
+        padding: 32px 24px;
+    }
+
+    /* CSV upload two-column layout */
+    .form-card > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Admin tabs */
+    .admin-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    /* Pagination */
+    #page-info {
+        font-size: 0.78rem;
+    }
+
+    /* Section title */
+    .section-title {
+        font-size: 1.2rem;
+    }
+
+    /* Back link */
+    .back-link {
+        font-size: 0.82rem;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .hero h1 {
+        font-size: 1.2rem;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.85rem;
+    }
+
+    .admin-tab {
+        font-size: 0.78rem;
+        padding: 8px 14px;
+    }
+
+    .nav-right span {
+        display: none;
+    }
+}
+
+/* ── Confusion Matrix ── */
+.cm-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.cm-header {
+    font-size: 0.75rem;
+    color: #8a9bb5;
+    font-weight: 600;
+    text-align: center;
+    padding: 4px;
+}
+
+.cm-cell {
+    border-radius: 8px;
+    padding: 20px 12px;
+    text-align: center;
+}
+
+.cm-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.cm-label {
+    font-size: 0.72rem;
+    opacity: 0.8;
+}
+
+.cm-tp {
+    background-color: #00e67622;
+    border: 1px solid #00e67644;
+    color: #00e676;
+}
+
+.cm-tn {
+    background-color: #00d4ff22;
+    border: 1px solid #00d4ff44;
+    color: #00d4ff;
+}
+
+.cm-fp {
+    background-color: #ff4d6d22;
+    border: 1px solid #ff4d6d44;
+    color: #ff4d6d;
+}
+
+.cm-fn {
+    background-color: #ffb30022;
+    border: 1px solid #ffb30044;
+    color: #ffb300;
+}
+
+/* ── Metric bars ── */
+.metric-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.metric-name {
+    font-size: 0.82rem;
+    color: #8a9bb5;
+    width: 90px;
+    flex-shrink: 0;
+}
+
+.metric-bar-wrap {
+    flex: 1;
+    background-color: #131b30;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.metric-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #00d4ff, #00e676);
+    border-radius: 4px;
+    transition: width 0.8s ease;
+}
+
+.metric-value {
+    font-size: 0.82rem;
+    color: #ffffff;
+    font-weight: 600;
+    width: 52px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    div[style*="repeat(3, 1fr)"] {
+        grid-template-columns: 1fr !important;
+    }
+}
