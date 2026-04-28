@@ -21,13 +21,15 @@ if not os.path.exists("logs.json"):
 
 if not os.path.exists("users.json"):
     with open("users.json", "w") as f:
-        json.dump([
-            {
-                "username": "admin",
-                "password": "$2b$12$JJ3N1hcGlffCkJLGGJbne.buiqT0uGhes.IduGbn6IJACoK8cdZau",
-                "role":     "admin"
-            }
-        ], f, indent=4)
+        json.dump({
+            "users": [
+                {
+                    "username": "admin",
+                    "password": "$2b$12$JJ3N1hcGlffCkJLGGJbne.buiqT0uGhes.IduGbn6IJACoK8cdZau",
+                    "role":     "admin"
+                }
+            ]
+        }, f, indent=4)
 
 # ── App setup ─────────────────────────────────────────────────────────────
 app = FastAPI()
