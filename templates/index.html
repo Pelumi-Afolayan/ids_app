@@ -6,14 +6,20 @@
     <title>IDS — Intrusion Detection System</title>
     <link rel="stylesheet" href="../static/style.css">
 </head>
+
+
 <body>
 
 <nav>
     <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
-    <div class="nav-right">
+    <button class="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    <div class="nav-right" id="nav-menu">
         <span>Logged in as <span class="nav-user">{{ username }}</span></span>
         <a href="/history">History</a>
-        <a href="/evaluation">Evaluation</a>
         <a href="/settings">Settings</a>
         {% if role == "admin" %}
         <a href="/admin">Admin Panel</a>
@@ -53,6 +59,21 @@
 <footer>
     Developed as part of a Final Year Project &mdash; Redeemer's University Nigeria, 2026
 </footer>
+
+
+<script>
+    function toggleMenu() {
+        document.getElementById('nav-menu').classList.toggle('open');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        const nav = document.querySelector('nav');
+        if (!nav.contains(e.target)) {
+            document.getElementById('nav-menu').classList.remove('open');
+        }
+    });
+</script>
 
 </body>
 </html>

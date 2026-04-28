@@ -10,7 +10,12 @@
 
 <nav>
     <a href="/" style="text-decoration: none;"><div class="logo">IDS<span>Net</span></div></a>
-    <div class="nav-right">
+    <button class="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    <div class="nav-right" id="nav-menu">
         <span>Logged in as <span class="nav-user">{{ username }}</span></span>
         <a href="/history">History</a>
         <a href="/settings">Settings</a>
