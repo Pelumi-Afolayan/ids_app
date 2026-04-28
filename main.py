@@ -14,17 +14,49 @@ from auth import (
     get_current_user, hash_password, add_user, delete_user, change_password
 )
 
+# ── Create default data files if not present (for fresh deployments) ──────
+if not os.path.exists("logs.json"):
+    with open("logs.json", "w") as f:
+        json.dump([], f)
+
+if not os.path.exists("users.json"):
+    with open("users.json", "w") as f:
+        json.dump([
+            {
+                "username": "admin",
+                "password": "$2b$12$JJ3N1hcGlffCkJLGGJbne.buiqT0uGhes.IduGbn6IJACoK8cdZau",
+                "role":     "admin"
+            }
+        ], f, indent=4)
+
 # ── App setup ─────────────────────────────────────────────────────────────
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # ── Load model ────────────────────────────────────────────────────────────
+# ── Download models from Google Drive if not present ─────────────────────
+import gdown
+
 MODEL_DIR = "models"
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+MODEL_FILES = {
+    "feature_columns.pkl": "1nE_JGV3GNlZ0I6vXxC9Knmq5Zbga6gvY",
+    "stacking_model.pkl":  "1uYXK_5GgQfRlaj6loeQCsJ-I6QfLpXry",
+    "scaler.pkl":          "1cDdUQ-KwGj97Ot23b1Xio6Ez996W1tLN",
+}
+
+for filename, file_id in MODEL_FILES.items():
+    dest = os.path.join(MODEL_DIR, filename)
+    if not os.path.exists(dest):
+        print(f"Downloading {filename}...")
+        gdown.download(f"https://drive.google.com/uc?id={file_id}", dest, quiet=False)
+
+# ── Load model ────────────────────────────────────────────────────────────
 model           = joblib.load(os.path.join(MODEL_DIR, "stacking_model.pkl"))
 scaler          = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
 feature_columns = joblib.load(os.path.join(MODEL_DIR, "feature_columns.pkl"))
-
 # ── Prediction log (persistent) ───────────────────────────────────────────
 LOGS_FILE = "logs.json"
 
