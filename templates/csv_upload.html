@@ -127,6 +127,18 @@
         const label = document.getElementById('file-name');
         label.textContent = input.files[0] ? input.files[0].name : 'No file selected';
     }
+
+    function toggleMenu() {
+        document.getElementById('nav-menu').classList.toggle('open');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        const nav = document.querySelector('nav');
+        if (!nav.contains(e.target)) {
+            document.getElementById('nav-menu').classList.remove('open');
+        }
+    });
 </script>
 
 </body>
