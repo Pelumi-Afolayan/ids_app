@@ -77,7 +77,7 @@
                 <div class="upload-area" onclick="document.getElementById('csv-input-view').click()">
                     <div class="upload-icon">📂</div>
                     <p>Click to select a CSV file</p>
-                    <input type="file" id="csv-input-view" name="file" accept=".csv" onchange="showFileName(this, 'file-name-view')">
+                    <input type="file" id="csv-input-view" name="file" accept=".csv" onchange="showFileName(this, 'file-name-view')" onclick="event.stopPropagation()">
                     <div id="file-name-view">No file selected</div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">View Results</button>
@@ -93,7 +93,7 @@
                 <div class="upload-area" onclick="document.getElementById('csv-input-download').click()">
                     <div class="upload-icon">⬇️</div>
                     <p>Click to select a CSV file</p>
-                    <input type="file" id="csv-input-download" name="file" accept=".csv" onchange="showFileName(this, 'file-name-download')">
+                    <input type="file" id="csv-input-download" name="file" accept=".csv" onchange="showFileName(this, 'file-name-download')" onclick="event.stopPropagation()">
                     <div id="file-name-download">No file selected</div>
                 </div>
                 <button type="submit" class="btn btn-outline" style="width: 100%;">Download Results</button>
@@ -109,22 +109,13 @@
 </footer>
 
 <script>
-    function showFileName(input) {
-        const label = document.getElementById('file-name');
-        label.textContent = input.files[0] ? input.files[0].name : 'No file selected';
-    }
-
-
-</script>
-
-<script>
     function toggleColumns() {
         const list = document.getElementById('columns-list');
         list.style.display = list.style.display === 'none' ? 'block' : 'none';
     }
 
-    function showFileName(input) {
-        const label = document.getElementById('file-name');
+      function showFileName(input, targetId) {
+        const label = document.getElementById(targetId);
         label.textContent = input.files[0] ? input.files[0].name : 'No file selected';
     }
 
