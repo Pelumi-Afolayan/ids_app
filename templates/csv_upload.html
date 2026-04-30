@@ -80,7 +80,7 @@
                     <input type="file" id="csv-input-view" name="file" accept=".csv" onchange="showFileName(this, 'file-name-view')" onclick="event.stopPropagation()">
                     <div id="file-name-view">No file selected</div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">View Results</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" onclick="showLoading('Analysing records...')">View Results</button>
             </form>
         </div>
 
@@ -96,7 +96,7 @@
                     <input type="file" id="csv-input-download" name="file" accept=".csv" onchange="showFileName(this, 'file-name-download')" onclick="event.stopPropagation()">
                     <div id="file-name-download">No file selected</div>
                 </div>
-                <button type="submit" class="btn btn-outline" style="width: 100%;">Download Results</button>
+                <button type="submit" class="btn btn-outline" style="width: 100%;" onclick="showLoading('Preparing download...')">Download Results</button>
             </form>
         </div>
 
@@ -114,16 +114,21 @@
         list.style.display = list.style.display === 'none' ? 'block' : 'none';
     }
 
-      function showFileName(input, targetId) {
+    function showFileName(input, targetId) {
         const label = document.getElementById(targetId);
         label.textContent = input.files[0] ? input.files[0].name : 'No file selected';
+    }
+
+    function showLoading(message) {
+        const overlay = document.getElementById('loading-overlay');
+        document.getElementById('loading-msg').textContent = message;
+        overlay.style.display = 'flex';
     }
 
     function toggleMenu() {
         document.getElementById('nav-menu').classList.toggle('open');
     }
 
-    // Close menu when clicking outside
     document.addEventListener('click', function(e) {
         const nav = document.querySelector('nav');
         if (!nav.contains(e.target)) {
@@ -131,6 +136,37 @@
         }
     });
 </script>
+
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+
+<!-- Loading overlay -->
+<div id="loading-overlay" style="
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: #0a0e1aee;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+">
+    <div style="
+        width: 48px; height: 48px;
+        border: 4px solid #1e2d4a;
+        border-top-color: #00d4ff;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+    "></div>
+    <p style="color: #00d4ff; font-size: 1rem; font-weight: 600;" id="loading-msg">Analysing records...</p>
+    <p style="color: #8a9bb5; font-size: 0.85rem;">This may take a moment depending on file size.</p>
+</div>
 
 </body>
 </html>
