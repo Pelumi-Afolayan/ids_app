@@ -10,3 +10,5 @@ itsdangerous==2.2.0
 bcrypt==5.0.0
 numpy==2.2.5
 gdown==5.2.0
+sqlalchemy==2.0.41
+psycopg2-binary==2.9.10

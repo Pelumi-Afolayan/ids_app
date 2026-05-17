@@ -1,94 +1,55 @@
-import json
 import os
 import io
 import joblib
 import pandas as pd
-from datetime import datetime
 from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
- 
+
 from auth import (
     get_user, verify_password, create_session,
-    get_current_user, hash_password, add_user, delete_user, change_password
+    get_current_user, hash_password, add_user, delete_user, change_password,
+    log_prediction_db, load_logs_db, load_all_logs_db, load_users, init_db
 )
- 
-# ── Create default data files if not present (for fresh deployments) ──────
-if not os.path.exists("logs.json"):
-    with open("logs.json", "w") as f:
-        json.dump([], f)
- 
-if not os.path.exists("users.json"):
-    with open("users.json", "w") as f:
-        json.dump({
-            "users": [
-                {
-                    "username": "admin",
-                    "password": "$2b$12$JJ3N1hcGlffCkJLGGJbne.buiqT0uGhes.IduGbn6IJACoK8cdZau",
-                    "role":     "admin"
-                }
-            ]
-        }, f, indent=4)
- 
+
+# ── Initialise database (creates tables and seeds admin account) ───────────
+init_db()
+
 # ── App setup ─────────────────────────────────────────────────────────────
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
- 
+
 # ── Download models from Google Drive if not present ─────────────────────
 import gdown
- 
+
 MODEL_DIR = "models"
 os.makedirs(MODEL_DIR, exist_ok=True)
- 
+
 MODEL_FILES = {
     "feature_columns.pkl": "1UrGkSoCImBpP6wUgKSUmpzdtnJAlll13",
     "scaler.pkl":          "1rkGkl1d6qjrxwJwJwsLnaERRtIwKNFcq",
     "selector.pkl":        "14zMesenppzCttPmli-oSVnYC2FVXO-Lw",
     "stacking_model.pkl":  "1uYXK_5GgQfRlaj6loeQCsJ-I6QfLpXry",
 }
- 
+
 for filename, file_id in MODEL_FILES.items():
     dest = os.path.join(MODEL_DIR, filename)
     if not os.path.exists(dest):
         print(f"Downloading {filename}...")
         gdown.download(f"https://drive.google.com/uc?id={file_id}", dest, quiet=False)
- 
+
 # ── Load model ────────────────────────────────────────────────────────────
 model           = joblib.load(os.path.join(MODEL_DIR, "stacking_model.pkl"))
 scaler          = joblib.load(os.path.join(MODEL_DIR, "scaler.pkl"))
 selector        = joblib.load(os.path.join(MODEL_DIR, "selector.pkl"))
 feature_columns = joblib.load(os.path.join(MODEL_DIR, "feature_columns.pkl"))
- 
-# ── Prediction log (persistent) ───────────────────────────────────────────
-LOGS_FILE = "logs.json"
- 
-def load_logs():
-    with open(LOGS_FILE, "r") as f:
-        return json.load(f)
- 
-def save_logs(logs):
-    with open(LOGS_FILE, "w") as f:
-        json.dump(logs, f, indent=4)
- 
-def log_prediction(username: str, pred_type: str, total: int, attacks: int):
-    logs = load_logs()
-    logs.append({
-        "username":  username,
-        "type":      pred_type,
-        "total":     total,
-        "attacks":   attacks,
-        "normal":    total - attacks,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    })
-    save_logs(logs)
- 
+
 # ── Helper: admin route data ──────────────────────────────────────────────
 def get_admin_context():
-    from auth import load_users
-    prediction_logs   = load_logs()
-    raw_users         = load_users()
+    prediction_logs = load_all_logs_db()
+    raw_users       = load_users()
     users = []
     for u in raw_users:
         count = sum(1 for log in prediction_logs if log["username"] == u["username"])
@@ -104,7 +65,7 @@ def get_admin_context():
         "total_attack":      sum(log["attacks"] for log in prediction_logs),
         "total_normal":      sum(log["normal"]  for log in prediction_logs)
     }
- 
+
 # ── All 19 original features the scaler was trained on ────────────────────
 ALL_FEATURES = [
     'L4_SRC_PORT', 'L4_DST_PORT', 'FLOW_DURATION_MILLISECONDS', 'PROTOCOL',
@@ -113,20 +74,20 @@ ALL_FEATURES = [
     'SRC_TOS', 'DST_TOS', 'TOTAL_FLOWS_EXP', 'IN_BYTES', 'IN_PKTS',
     'OUT_BYTES', 'OUT_PKTS'
 ]
- 
+
 # ── Helper: preprocess input df ───────────────────────────────────────────
 def preprocess(df: pd.DataFrame):
     df = df[ALL_FEATURES].copy()           # select all 19 for scaler
     scaled = scaler.transform(df)          # MinMaxScaler on all 19
     selected = selector.transform(scaled)  # Chi-Square picks top 15
     return selected
- 
+
 # ── Helper: require login ─────────────────────────────────────────────────
 def require_login(request: Request):
     return get_current_user(request)
- 
+
 # ── Routes ────────────────────────────────────────────────────────────────
- 
+
 # Login page
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -136,7 +97,7 @@ async def login_page(request: Request):
     return templates.TemplateResponse(request, "login.html", {
         "error": None
     })
- 
+
 @app.post("/login", response_class=HTMLResponse)
 async def login_post(request: Request,
                      username: str = Form(...),
@@ -150,14 +111,14 @@ async def login_post(request: Request,
     response = RedirectResponse("/", status_code=302)
     response.set_cookie("session", token, httponly=True, max_age=3600)
     return response
- 
+
 # Logout
 @app.get("/logout")
 async def logout():
     response = RedirectResponse("/login", status_code=302)
     response.delete_cookie("session")
     return response
- 
+
 # Register page
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
@@ -167,7 +128,7 @@ async def register_page(request: Request):
     return templates.TemplateResponse(request, "register.html", {
         "error": None, "success": None
     })
- 
+
 @app.post("/register", response_class=HTMLResponse)
 async def register_post(request: Request,
                         username: str = Form(...),
@@ -190,7 +151,7 @@ async def register_post(request: Request,
         "error": None,
         "success": "Account created successfully. You can now sign in."
     })
- 
+
 # Home
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -201,7 +162,7 @@ async def home(request: Request):
         "username": user["username"],
         "role":     user["role"]
     })
- 
+
 # CSV upload page
 @app.get("/csv", response_class=HTMLResponse)
 async def csv_page(request: Request):
@@ -212,17 +173,17 @@ async def csv_page(request: Request):
         "username": user["username"],
         "role":     user["role"]
     })
- 
+
 # CSV prediction
 @app.post("/predict/csv", response_class=HTMLResponse)
 async def predict_csv(request: Request, file: UploadFile = File(...)):
     user = require_login(request)
     if not user:
         return RedirectResponse("/login", status_code=302)
- 
+
     contents = await file.read()
     df = pd.read_csv(io.StringIO(contents.decode("utf-8")), low_memory=False)
- 
+
     missing = [c for c in ALL_FEATURES if c not in df.columns]
     if missing:
         return templates.TemplateResponse(request, "csv_upload.html", {
@@ -230,11 +191,11 @@ async def predict_csv(request: Request, file: UploadFile = File(...)):
             "role":     user["role"],
             "error":    f"Missing columns: {', '.join(missing)}"
         })
- 
+
     X = preprocess(df)
     preds = model.predict(X)
     labels = ["Attack" if p == 1 else "Normal" for p in preds]
- 
+
     display_df = df.copy()
     display_df["prediction"] = labels
     rows = []
@@ -248,13 +209,13 @@ async def predict_csv(request: Request, file: UploadFile = File(...)):
             "PROTOCOL":   int(row.get("PROTOCOL", 0)),
             "prediction": row["prediction"]
         })
- 
+
     total   = len(labels)
     attacks = labels.count("Attack")
     normal  = labels.count("Normal")
- 
-    log_prediction(user["username"], "CSV", total, attacks)
- 
+
+    log_prediction_db(user["username"], "CSV", total, attacks)
+
     return templates.TemplateResponse(request, "csv_result.html", {
         "username": user["username"],
         "role":     user["role"],
@@ -263,34 +224,34 @@ async def predict_csv(request: Request, file: UploadFile = File(...)):
         "attack":   attacks,
         "normal":   normal
     })
- 
+
 # Download CSV predictions
 @app.post("/predict/csv/download", response_class=StreamingResponse)
 async def download_csv(request: Request, file: UploadFile = File(...)):
     user = require_login(request)
     if not user:
         return RedirectResponse("/login", status_code=302)
- 
+
     contents = await file.read()
     df = pd.read_csv(io.StringIO(contents.decode("utf-8")), low_memory=False)
- 
+
     missing = [c for c in ALL_FEATURES if c not in df.columns]
     if missing:
         return RedirectResponse("/csv", status_code=302)
- 
+
     X = preprocess(df)
     preds = model.predict(X)
     labels = ["Attack" if p == 1 else "Normal" for p in preds]
- 
+
     df["Prediction"] = labels
     output = df.to_csv(index=False)
- 
+
     return StreamingResponse(
         io.StringIO(output),
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=ids_predictions.csv"}
     )
- 
+
 # Single record page
 @app.get("/single", response_class=HTMLResponse)
 async def single_page(request: Request):
@@ -301,42 +262,39 @@ async def single_page(request: Request):
         "username": user["username"],
         "role":     user["role"]
     })
- 
+
 # Single prediction
 @app.post("/predict/single", response_class=HTMLResponse)
 async def predict_single(request: Request):
     user = require_login(request)
     if not user:
         return RedirectResponse("/login", status_code=302)
- 
+
     form = await request.form()
     record = {col: float(form[col]) for col in ALL_FEATURES}
     df = pd.DataFrame([record])
- 
+
     X = preprocess(df)
     pred = model.predict(X)[0]
     label = "Attack" if pred == 1 else "Normal"
- 
-    log_prediction(user["username"], "Single", 1, 1 if pred == 1 else 0)
- 
+
+    log_prediction_db(user["username"], "Single", 1, 1 if pred == 1 else 0)
+
     return templates.TemplateResponse(request, "single_result.html", {
         "username":   user["username"],
         "role":       user["role"],
         "prediction": label
     })
- 
+
 # Prediction history
 @app.get("/history", response_class=HTMLResponse)
 async def history_page(request: Request):
     user = require_login(request)
     if not user:
         return RedirectResponse("/login", status_code=302)
- 
-    all_logs = load_logs()
-    user_logs = all_logs if user["role"] == "admin" else [
-        log for log in all_logs if log["username"] == user["username"]
-    ]
- 
+
+    user_logs = load_logs_db(username=user["username"], role=user["role"])
+
     return templates.TemplateResponse(request, "history.html", {
         "username":          user["username"],
         "role":              user["role"],
@@ -345,7 +303,7 @@ async def history_page(request: Request):
         "total_attack":      sum(log["attacks"] for log in user_logs),
         "total_normal":      sum(log["normal"]  for log in user_logs)
     })
- 
+
 # Admin dashboard
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page(request: Request):
@@ -360,7 +318,7 @@ async def admin_page(request: Request):
         "role":     user["role"],
         **ctx
     })
- 
+
 # Add user (admin only)
 @app.post("/admin/add-user", response_class=HTMLResponse)
 async def admin_add_user(request: Request,
@@ -372,7 +330,7 @@ async def admin_add_user(request: Request,
         return RedirectResponse("/login", status_code=302)
     if user["role"] != "admin":
         return RedirectResponse("/", status_code=302)
- 
+
     success = add_user(new_username, new_password, new_role)
     ctx = get_admin_context()
     return templates.TemplateResponse(request, "admin.html", {
@@ -382,7 +340,7 @@ async def admin_add_user(request: Request,
         "add_error":   "Username already exists." if not success else None,
         **ctx
     })
- 
+
 # Delete user (admin only)
 @app.post("/admin/delete-user", response_class=HTMLResponse)
 async def admin_delete_user(request: Request,
@@ -392,7 +350,7 @@ async def admin_delete_user(request: Request,
         return RedirectResponse("/login", status_code=302)
     if user["role"] != "admin":
         return RedirectResponse("/", status_code=302)
- 
+
     success = delete_user(del_username)
     ctx = get_admin_context()
     return templates.TemplateResponse(request, "admin.html", {
@@ -402,7 +360,7 @@ async def admin_delete_user(request: Request,
         "del_error":   f"Cannot delete '{del_username}'." if not success else None,
         **ctx
     })
- 
+
 # Password change page
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
@@ -415,7 +373,7 @@ async def settings_page(request: Request):
         "error":    None,
         "success":  None
     })
- 
+
 @app.post("/settings", response_class=HTMLResponse)
 async def settings_post(request: Request,
                         old_password: str = Form(...),
@@ -424,7 +382,7 @@ async def settings_post(request: Request,
     user = require_login(request)
     if not user:
         return RedirectResponse("/login", status_code=302)
- 
+
     if new_password != confirm_password:
         return templates.TemplateResponse(request, "settings.html", {
             "username": user["username"],
@@ -432,7 +390,7 @@ async def settings_post(request: Request,
             "error":    "New passwords do not match.",
             "success":  None
         })
- 
+
     if len(new_password) < 6:
         return templates.TemplateResponse(request, "settings.html", {
             "username": user["username"],
@@ -440,24 +398,24 @@ async def settings_post(request: Request,
             "error":    "New password must be at least 6 characters.",
             "success":  None
         })
- 
+
     success, error_msg = change_password(user["username"], old_password, new_password)
- 
+
     return templates.TemplateResponse(request, "settings.html", {
         "username": user["username"],
         "role":     user["role"],
         "error":    error_msg if not success else None,
         "success":  "Password changed successfully." if success else None
     })
- 
- 
+
+
 # Model evaluation page
 @app.get("/evaluation", response_class=HTMLResponse)
 async def evaluation_page(request: Request):
     user = require_login(request)
     if not user:
         return RedirectResponse("/login", status_code=302)
- 
+
     models_data = [
         {
             "name": "KNN",
@@ -490,7 +448,7 @@ async def evaluation_page(request: Request):
             "tp": 70287, "tn": 129697, "fp": 10, "fn": 6
         }
     ]
- 
+
     return templates.TemplateResponse(request, "evaluation.html", {
         "username": user["username"],
         "role":     user["role"],
